@@ -1,0 +1,136 @@
+\documentclass[10pt, aspectratio=1610]{beamer}
+\usetheme{UCL}
+\usepackage{bookmark}
+
+% Define Maroon locally or rely on it if added to the .sty palette
+\definecolor{Maroon}{HTML}{800000}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor={uclgold},
+  filecolor={Maroon},
+  citecolor={uclgold},
+  urlcolor={uclgold}
+}
+
+\institute{Department of Statistical Science ~ | ~ University College London}
+
+% These can be commented out if you don't want email/website/social media links
+\newcommand{\insertsocials}{%
+  {\setlength{\baselineskip}{9pt}%
+  \faEnvelope~\href{mailto:n.surname@ucl.ac.uk}{\texttt{n.surname@ucl.ac.uk}} \\
+  \faGlobe~\href{https://yourwebsite.com}{\texttt{https://yourwebsite.com}}\\
+  \faGithub~\href{https://github.com/you}{\texttt{https://github.com/you}} \\
+% Can also add social media links, e.g.
+  \faMastodon~\href{https://mas.to/@yourmastodon}{\texttt{@yourmastodon@mas.to}} \,\textbar\, 
+  \faLinkedinIn~\href{https://www.linkedin.com/in/name-surname/}{\texttt{name-surname}}
+  }%
+}
+
+%------------------------------------------------------------
+% PRESENTATION METADATA (Completely Automated)
+%------------------------------------------------------------
+\title[A short title]{A very long title for my slides, which may span across two lines}
+\author{Your Name}
+\date[20 Jul 2026]{20 July 2026}
+
+% Using your new automated conference metadata macro
+\conference[SHORTER TITLE OF THE CONFERENCE]{The full name of the conference, Where it is\\ The name of the session}
+
+%------------------------------------------------------------
+% PRESENTATION BODY
+%------------------------------------------------------------
+\begin{document}
+
+\frame[plain]{\titlepage}
+
+\begin{frame}{First Slide Title}
+  The footer below now displays text-only metadata flawlessly.
+\end{frame}
+
+\begin{frame}{Hello there {\textemoji{👋}}}
+\begin{itemize}
+\item
+  Presenting code and LaTeX equations
+\item
+  Images
+\end{itemize}
+
+\ldots and much more
+\end{frame}
+
+\begin{frame}{No logo}
+  \global\uclNoLogotrue
+  Here's a slide with no logo -- the footline macro safely cleans this frame.
+\end{frame}
+
+\begin{frame}[fragile]{Some maths}
+  We can also include maths, using standard \LaTeX:
+
+  \[\class{italian-green}{p(y\mid\mathcal{D}) = \int p(y\mid\bm\theta)p(\boldsymbol\theta\mid\mathcal{D})d\boldsymbol\theta} \]
+
+  To use colours with \LaTeX, you can utilize the custom theme wrapper:
+  \texttt{\$\textbackslash{}class\{color\}\{expression\}\$}
+
+  You can define a probabilistic assumption as
+  \[\mathcolor{spanish-red}{y \mid \bm\theta \sim \dpois(\bm\theta)}\] 
+  but in line it would look like this \(\mathcolor{myblue}{y\sim \dnorm(\mu,\sigma^2)}\).
+\end{frame}
+
+\section{Example Section Divider}
+
+\begin{frame}{After Section Frame}
+  This slide appears directly after a section break layout has rendered automatically.
+\end{frame}
+
+\begin{frame}[fragile,noframenumbering]{}
+\uclDividerFrameStart{A section}
+
+Using the tag \verb"\uclDividerFrameStart" makes for some nicer formatting (must be turned off before the end of the frame with
+\verb"\uclDividerFrameEnd").
+
+\uclDividerFrameEnd
+\end{frame}
+
+\begin{frame}{Column Layout}
+\protect\phantomsection\label{column-layout}
+Arrange content into columns of varying widths:
+
+\begin{columns}[T]
+\begin{column}{0.35\linewidth}
+\begin{block}{Motor Trend Car Road Tests}
+\protect\phantomsection\label{motor-trend-car-road-tests}
+The data was extracted from the 1974 Motor Trend US magazine, and
+comprises fuel consumption and 10 aspects of automobile design and
+performance for 32 automobiles.
+\end{block}
+\end{column}
+
+\begin{column}{0.03\linewidth}
+\end{column}
+
+\begin{column}{0.62\linewidth}
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}lrrrrr@{}}
+\toprule\noalign{}
+& mpg & cyl & disp & hp & wt \\
+\midrule\noalign{}
+\endhead
+Mazda RX4 & 21.0 & 6 & 160 & 110 & 2.620 \\
+Mazda RX4 Wag & 21.0 & 6 & 160 & 110 & 2.875 \\
+Datsun 710 & 22.8 & 4 & 108 & 93 & 2.320 \\
+Hornet 4 Drive & 21.4 & 6 & 258 & 110 & 3.215 \\
+Hornet Sportabout & 18.7 & 8 & 360 & 175 & 3.440 \\
+Valiant & 18.1 & 6 & 225 & 105 & 3.460 \\
+\bottomrule\noalign{}
+\end{longtable}
+}
+\end{column}
+\end{columns}
+
+Learn more:
+\href{https://quarto.org/docs/presentations/revealjs/\#multiple-columns}{Multiple
+Columns}
+\end{frame}
+
+\end{document}

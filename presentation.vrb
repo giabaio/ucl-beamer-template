@@ -1,0 +1,7 @@
+\frametitle{}
+\uclDividerFrameStart{A section}
+
+Using the tag \verb"\uclDividerFrameStart" makes for some nicer formatting (must be turned off before the end of the frame with
+\verb"\uclDividerFrameEnd").
+
+\uclDividerFrameEnd
