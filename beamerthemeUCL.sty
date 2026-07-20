@@ -1,6 +1,7 @@
 %%%============================================================
 %%%  beamerthemeUCL.sty
 %%%  UCL Beamer theme for LuaLaTeX
+%%%  (c) Gianluca Baio, July 2026
 %%%============================================================
 \ProvidesPackage{beamerthemeUCL}[2026/07/20 UCL Beamer Theme]
 
@@ -12,9 +13,9 @@
 \RequirePackage{fontawesome5}
 \RequirePackage{unicode-math}
 
-%%%------------------------------------------------------------
+%%%============================================================
 %%%  Pandoc/Quarto Compatibility & Layout Helpers
-%%%------------------------------------------------------------
+%%%============================================================
 \RequirePackage{longtable}
 \RequirePackage{booktabs}
 \RequirePackage{array}
@@ -46,9 +47,9 @@
 % Per-frame boolean: true = skip logo on this frame
 \newif\ifuclNoLogo
 
-%%%------------------------------------------------------------
-%%%  MathJax / Unicode-Math compatibility
-%%%------------------------------------------------------------
+%%%============================================================
+%%%  Unicode-Math compatibility
+%%%============================================================
 \protected\def\bm#1{\symbf{#1}}
 \protected\def\boldsymbol#1{\symbf{#1}}
 
@@ -58,15 +59,17 @@
 % Math color wrapper helper
 \def\class#1#2{{\color{#1}#2}}
 
-%%%------------------------------------------------------------
+%%%============================================================
 %%%  Path constants
-%%%------------------------------------------------------------
+%%%============================================================
+% These can be modified, but the UCL fonts and logo images must be
+% available and the sty file must know where to look for them!
 \providecommand{\UCLfontpath}{css/fonts/}
 \providecommand{\UCLimgpath}{images/}
 
-%%%------------------------------------------------------------
+%%%============================================================
 %%%  Fonts
-%%%------------------------------------------------------------
+%%%============================================================
 \setmainfont{UCLSans}[
   Path             = \UCLfontpath,
   Extension        = .ttf,
@@ -88,9 +91,9 @@
   \setmonofont{Ubuntu Mono}[Scale=0.90]%
 }{}
 
-%%%------------------------------------------------------------
+%%%============================================================
 %%%  Colours (UCL palette)
-%%%------------------------------------------------------------
+%%%============================================================
 \definecolor{uclbrightpurple}{HTML}{993BFF}
 \definecolor{ucldarkpurple}{HTML}{361A54}
 \definecolor{uclnavy}{HTML}{002248}   
@@ -123,9 +126,9 @@
 \definecolor{magenta}{HTML}{FF00FF}
 \definecolor{Maroon}{HTML}{800000}
 
-%%%------------------------------------------------------------
+%%%============================================================
 %%%  Beamer colour scheme
-%%%------------------------------------------------------------
+%%%============================================================
 \setbeamercolor{normal text}{fg=ucltext, bg=uclbg}
 \setbeamercolor{background canvas}{bg=uclbg}
 \setbeamercolor{structure}{fg=ucldarkpurple}
@@ -148,9 +151,9 @@
 \setbeamercolor{block title}{fg=uclbg, bg=ucldarkpurple}
 \setbeamercolor{block body}{fg=ucltext, bg=uclbg!92!ucldarkpurple}
 
-%%%------------------------------------------------------------
+%%%============================================================
 %%%  Beamer fonts & Templates
-%%%------------------------------------------------------------
+%%%============================================================
 \setbeamerfont{subtitle}{family=\sffamily, size=\normalsize}
 \setbeamerfont{author}{family=\sffamily, series=\bfseries, size=\small}
 \setbeamerfont{date}{family=\sffamily, size=\footnotesize}
@@ -201,9 +204,9 @@
   \color{uclnavy}\itshape
 }{\end{tcolorbox}}
 
-%%%------------------------------------------------------------
-%%%  Footline Setup (Automated & Unlinked Fields)
-%%%------------------------------------------------------------
+%%%============================================================
+%%%  Footline Setup
+%%%============================================================
 \setbeamertemplate{footline}{%
   \ifnum\insertframenumber=1\relax
     % Title frame background doesn't require a footer band
@@ -235,9 +238,9 @@
   \fi
 }
 
-%%%------------------------------------------------------------
-%%%  Title page template (Fixed full-bleed coverage)
-%%%------------------------------------------------------------
+%%%============================================================
+%%%  Title page template
+%%%============================================================
 \setbeamertemplate{title page}{%
   \begin{tikzpicture}[remember picture, overlay]
     \clip (current page.south west) rectangle (current page.north east);
@@ -284,9 +287,9 @@
   \end{tikzpicture}%
 }
 
-%%%------------------------------------------------------------
-%%%  Section divider slides (Fixed full-bleed stripe alignment)
-%%%------------------------------------------------------------
+%%%============================================================
+%%%  Section divider slides
+%%%============================================================
 \AtBeginSection[]{%
   \global\uclNoLogofalse
   \begin{frame}[plain, noframenumbering]
@@ -307,9 +310,9 @@
   \end{frame}
 }
 
-%%%------------------------------------------------------------
-%%%  Custom .divider frame setup
-%%%------------------------------------------------------------
+%%%============================================================
+%%%  Custom divider frame setup
+%%%============================================================
 \newcommand{\uclDividerFrameStart}[1]{%
   \setbeamertemplate{frametitle}{}%
   \vspace*{0.18\paperheight}%
@@ -321,9 +324,9 @@
 }
 \newcommand{\uclDividerFrameEnd}{\end{minipage}}
 
-%%%------------------------------------------------------------
+%%%============================================================
 %%%  Utility commands & Text Macros
-%%%------------------------------------------------------------
+%%%============================================================
 \newcommand{\faded}[1]{{\color{ucltext!40!uclbg}#1}}
 \newcommand{\fadedsmall}[1]{{\color{ucltext!40!uclbg}\footnotesize #1}}
 
@@ -341,6 +344,7 @@
 % Hyperlink suppression utility macro
 \newcommand{\puretext}[1]{{\renewcommand{\hyperlink}[2]{##2}#1}}
 
+% These are a bunch of helpful Stats commands. More can be defined if needed.
 \newcommand{\txt}[1]{\text{#1}}
 \newcommand{\logit}{\text{logit}}
 \newcommand{\HR}{\text{HR}}
