@@ -12,5 +12,6 @@ not be too complicated to create.
    ```
    lualatex presentation.tex
    ```
-   
 
+## Computer specs
+This has been tested on a Linux PopOS 24.04 machine.

@@ -1,0 +1,377 @@
+%%%============================================================
+%%%  beamerthemeUCL.sty
+%%%  UCL Beamer theme for LuaLaTeX
+%%%============================================================
+\ProvidesPackage{beamerthemeUCL}[2026/07/20 UCL Beamer Theme]
+
+\RequirePackage{fontspec}
+\RequirePackage{tikz}
+\RequirePackage[most]{tcolorbox}
+\RequirePackage{soul}
+\RequirePackage{xcolor}
+\RequirePackage{fontawesome5}
+\RequirePackage{unicode-math}
+
+%%%------------------------------------------------------------
+%%%  Pandoc/Quarto Compatibility & Layout Helpers
+%%%------------------------------------------------------------
+\RequirePackage{longtable}
+\RequirePackage{booktabs}
+\RequirePackage{array}
+\RequirePackage{calc} 
+\RequirePackage{caption}
+\RequirePackage{graphicx}
+
+\newcounter{none} % for unnumbered tables
+
+% Make caption package work with longtable
+\def\fnum@table{\tablename~\thetable}
+
+\newsavebox\pandoc@box
+\newcommand*\pandocbounded[1]{% scales image to fit in text height/width
+  \sbox\pandoc@box{#1}%
+  \Gscale@div\@tempa{\textheight}{\dimexpr\ht\pandoc@box+\dp\pandoc@box\relax}%
+  \Gscale@div\@tempb{\linewidth}{\wd\pandoc@box}%
+  \ifdim\@tempb\p@<\@tempa\p@\let\@tempa\@tempb\fi% select the smaller of both
+  \ifdim\@tempa\p@<\p@\scalebox{\@tempa}{\usebox\pandoc@box}%
+  \else\usebox{\pandoc@box}%
+  \fi%
+}
+
+% Set default figure placement to htbp
+\def\fps@figure{htbp}
+
+\usetikzlibrary{calc, positioning}
+
+% Per-frame boolean: true = skip logo on this frame
+\newif\ifuclNoLogo
+
+%%%------------------------------------------------------------
+%%%  MathJax / Unicode-Math compatibility
+%%%------------------------------------------------------------
+\protected\def\bm#1{\symbf{#1}}
+\protected\def\boldsymbol#1{\symbf{#1}}
+
+% Restore classical Computer Modern calligraphic \mathcal
+\DeclareMathAlphabet{\mathcal}{OMS}{cmsy}{m}{n}
+
+% Math color wrapper helper
+\def\class#1#2{{\color{#1}#2}}
+
+%%%------------------------------------------------------------
+%%%  Path constants
+%%%------------------------------------------------------------
+\providecommand{\UCLfontpath}{css/fonts/}
+\providecommand{\UCLimgpath}{images/}
+
+%%%------------------------------------------------------------
+%%%  Fonts
+%%%------------------------------------------------------------
+\setmainfont{UCLSans}[
+  Path             = \UCLfontpath,
+  Extension        = .ttf,
+  UprightFont      = *-Regular,
+  BoldFont         = *-Bold,
+  FontFace         = {sb}{n}{*-SemiBold},
+  AutoFakeSlant    = 0.18,
+]
+\setsansfont{UCLSans}[
+  Path             = \UCLfontpath,
+  Extension        = .ttf,
+  UprightFont      = *-Regular,
+  BoldFont         = *-Bold,
+  FontFace         = {sb}{n}{*-SemiBold},
+  AutoFakeSlant    = 0.18,
+]
+
+\IfFontExistsTF{Ubuntu Mono}{%
+  \setmonofont{Ubuntu Mono}[Scale=0.90]%
+}{}
+
+%%%------------------------------------------------------------
+%%%  Colours (UCL palette)
+%%%------------------------------------------------------------
+\definecolor{uclbrightpurple}{HTML}{993BFF}
+\definecolor{ucldarkpurple}{HTML}{361A54}
+\definecolor{uclnavy}{HTML}{002248}   
+\definecolor{uclblue}{HTML}{002855}   
+\definecolor{uclbg}{HTML}{FAFAFA}     
+\definecolor{ucltext}{HTML}{00142B}   
+\definecolor{uclgold}{HTML}{C6AA51}   
+\definecolor{ucldarkgold}{HTML}{AC8300} 
+\definecolor{uclhighlight}{HTML}{715600}
+\definecolor{ucllink}{HTML}{95A6B8}
+\definecolor{uclfootertext}{HTML}{CCD1D5}
+
+% Named colour classes
+\definecolor{myred}{HTML}{E62B4F}
+\definecolor{myblue}{HTML}{24568C}
+\definecolor{orange}{HTML}{FF8811}
+\definecolor{olive}{HTML}{334F17}
+\definecolor{ubuntublue}{HTML}{035AA6}
+\definecolor{spanish-red}{HTML}{C60B1E}
+\definecolor{spanish-yellow}{HTML}{FFC400}
+\definecolor{italian-green}{HTML}{009246}
+\definecolor{italian-red}{HTML}{CE2B37}
+\definecolor{blue90red60}{HTML}{7E5DC9}
+\definecolor{blue60red90}{HTML}{9350C7}
+\definecolor{lightgray}{HTML}{EDEDED}
+\definecolor{navbargrey}{HTML}{D5D5D5}
+\definecolor{beamer-yellow}{HTML}{FCD000}
+\definecolor{samp-blue}{HTML}{1B5497}
+\definecolor{samp-red}{HTML}{C21718}
+\definecolor{magenta}{HTML}{FF00FF}
+\definecolor{Maroon}{HTML}{800000}
+
+%%%------------------------------------------------------------
+%%%  Beamer colour scheme
+%%%------------------------------------------------------------
+\setbeamercolor{normal text}{fg=ucltext, bg=uclbg}
+\setbeamercolor{background canvas}{bg=uclbg}
+\setbeamercolor{structure}{fg=ucldarkpurple}
+\setbeamercolor{alerted text}{fg=uclbrightpurple}
+\setbeamercolor{example text}{fg=ucldarkgold}
+
+\setbeamercolor{frametitle}{fg=ucldarkpurple, bg=uclbg}
+\setbeamercolor{title}{fg=uclbg}
+\setbeamercolor{subtitle}{fg=uclbg}
+\setbeamercolor{author}{fg=uclbg}
+\setbeamercolor{date}{fg=uclbg}
+\setbeamercolor{institute}{fg=uclbg}
+
+\setbeamercolor{itemize item}{fg=ucldarkgold}
+\setbeamercolor{itemize subitem}{fg=ucldarkgold}
+\setbeamercolor{itemize subsubitem}{fg=ucldarkgold}
+\setbeamercolor{enumerate item}{fg=ucldarkgold}
+\setbeamercolor{enumerate subitem}{fg=ucldarkgold}
+
+\setbeamercolor{block title}{fg=uclbg, bg=ucldarkpurple}
+\setbeamercolor{block body}{fg=ucltext, bg=uclbg!92!ucldarkpurple}
+
+%%%------------------------------------------------------------
+%%%  Beamer fonts & Templates
+%%%------------------------------------------------------------
+\setbeamerfont{subtitle}{family=\sffamily, size=\normalsize}
+\setbeamerfont{author}{family=\sffamily, series=\bfseries, size=\small}
+\setbeamerfont{date}{family=\sffamily, size=\footnotesize}
+\setbeamerfont{institute}{family=\sffamily, size=\footnotesize}
+\setbeamerfont{footline}{family=\sffamily, size=\scriptsize}
+
+\newlength{\uclbasesize}
+\AtBeginDocument{\makeatletter\uclbasesize=\f@size pt\makeatother}
+
+\setbeamerfont{frametitle}{family=\sffamily, series=\bfseries,
+  size=\fontsize{\dimexpr1.5\uclbasesize\relax}{\dimexpr1.8\uclbasesize\relax}\selectfont}
+
+\setbeamertemplate{navigation symbols}{}
+\useinnertheme{default}
+
+% Itemize template
+\setbeamertemplate{itemize item}{\raisebox{0.15ex}{\color{ucldarkgold}\rule{0.55ex}{0.55ex}}}
+\setbeamertemplate{itemize subitem}{\raisebox{0.15ex}{\color{ucldarkgold}\rule{0.45ex}{0.45ex}}}
+\setbeamertemplate{itemize subsubitem}{\raisebox{0.15ex}{\color{ucldarkgold}\rule{0.35ex}{0.35ex}}}
+\setbeamertemplate{enumerate item}{\color{ucldarkgold}\bfseries\insertenumlabel.}
+
+% Blocks template
+\setbeamertemplate{block begin}{%
+  \setbeamercolor{block title}{fg=uclbg, bg=ucldarkpurple}%
+  \begin{beamercolorbox}[colsep*=.75ex, sep=0.4ex, rounded=true]{block title}%
+    \usebeamerfont*{block title}\insertblocktitle
+  \end{beamercolorbox}%
+  \nointerlineskip
+  \begin{beamercolorbox}[colsep*=.75ex, sep=0.6ex, vmode, rounded=true]{block body}%
+}
+\setbeamertemplate{block end}{\end{beamercolorbox}\vspace*{0.5ex}}
+
+% Frametitle template
+\setbeamertemplate{frametitle}{%
+  \nointerlineskip
+  \vspace{0.6ex}
+  \begin{beamercolorbox}[wd=\paperwidth, ht=3.2ex, dp=1.2ex, leftskip=0.05\paperwidth]{frametitle}%
+    \usebeamerfont{frametitle}\usebeamercolor[fg]{frametitle}%
+    \insertframetitle%
+  \end{beamercolorbox}%
+}
+
+% Blockquotes Environment
+\newenvironment{uclquote}{%
+  \begin{tcolorbox}[colback=uclbg!96!uclnavy, colframe=ucldarkgold,
+                    boxrule=0pt, leftrule=1.2pt, arc=0pt, outer arc=0pt,
+                    left=6pt, right=6pt, top=4pt, bottom=4pt]%
+  \color{uclnavy}\itshape
+}{\end{tcolorbox}}
+
+%%%------------------------------------------------------------
+%%%  Footline Setup (Automated & Unlinked Fields)
+%%%------------------------------------------------------------
+\setbeamertemplate{footline}{%
+  \ifnum\insertframenumber=1\relax
+    % Title frame background doesn't require a footer band
+  \else
+    \begin{tikzpicture}[remember picture, overlay]
+      \clip (current page.south west) rectangle (current page.north east);
+      
+      \fill[uclbrightpurple] (current page.south west) 
+        rectangle ($(current page.south west) + (0.10\paperwidth, 0.55cm)$);
+      \fill[ucldarkpurple] ($(current page.south west) + (0.10\paperwidth, 0cm)$) 
+        rectangle ($(current page.south east) + (0cm, 0.55cm)$);
+      
+      \node[anchor=west, font=\sffamily\scriptsize, text=uclfootertext, text width=0.75\paperwidth, align=left]
+        at ($(current page.south west) + (0.11\paperwidth, 0.275cm)$) {
+          \textcopyright{} \insertshortauthor{} \textbar{} \puretext{\insertshorttitle} \textbar{} \insertshortconference{} \textbar{} \insertshortdate{}
+        };
+        
+      \node[anchor=east, font=\sffamily\scriptsize, text=uclfootertext]
+        at ($(current page.south east) + (-0.02\paperwidth, 0.275cm)$) {\insertframenumber/\inserttotalframenumber};
+        
+      \ifuclNoLogo\else
+        \node[anchor=south east, inner sep=2pt]
+          at ($(current page.south east) + (-0.01\paperwidth, 0.55cm)$)
+          {\includegraphics[height=0.6cm]{\UCLimgpath ucl-new-logo.png}};
+      \fi
+    \end{tikzpicture}%
+    \vspace*{0.55cm}%
+    \global\uclNoLogofalse
+  \fi
+}
+
+%%%------------------------------------------------------------
+%%%  Title page template (Fixed full-bleed coverage)
+%%%------------------------------------------------------------
+\setbeamertemplate{title page}{%
+  \begin{tikzpicture}[remember picture, overlay]
+    \clip (current page.south west) rectangle (current page.north east);
+    
+    \fill[uclbrightpurple] (current page.north west) rectangle ($(current page.south west) + (0.10\paperwidth, 0cm)$);
+    \fill[ucldarkpurple] ($(current page.north west) + (0.10\paperwidth, 0cm)$) rectangle (current page.south east);
+
+    \node[anchor=south east, inner sep=10pt] at (current page.south east)
+      {\includegraphics[height=1.0cm]{\UCLimgpath ucl-new-title.png}};
+
+    \node[anchor=north west] at ($(current page.north west) + (0.11\paperwidth, -0.14\paperheight)$)
+      {\color{uclbg}\sffamily\bfseries\Huge
+       \begin{minipage}[t]{0.82\paperwidth}%
+         \setlength{\baselineskip}{1em}%
+         \raggedright
+         \inserttitle
+       \end{minipage}};
+
+    \node[anchor=north west, text=uclbg, font=\sffamily\Large, text width=0.82\paperwidth, align=left]
+      at ($(current page.north west) + (0.11\paperwidth, -0.35\paperheight)$)
+      {\color{uclbg!70!ucldarkpurple}\insertsubtitle};
+
+    \node[anchor=north west, text=uclbg, font=\sffamily\bfseries\normalsize, text width=0.82\paperwidth, align=left]
+      at ($(current page.north west) + (0.11\paperwidth, -0.45\paperheight)$)
+      {\insertauthor};
+
+    \node[anchor=north west, text=uclgold, font=\sffamily\scriptsize, text width=0.82\paperwidth, align=left]
+      at ($(current page.north west) + (0.11\paperwidth, -0.50\paperheight)$)
+      {\insertsocials\par};
+
+    \node[anchor=north west, text=uclbg,
+          font=\sffamily\normalsize,
+          text width=0.82\paperwidth, align=left]
+      at ($(current page.north west) + (0.11\paperwidth, -0.68\paperheight)$)
+      {\color{uclbg!75!ucldarkpurple}\insertdate 
+       \ifx\insertconference\undefined\else \\ \insertconference\fi};
+
+    % institute at the bottom (empty = nothing rendered)
+    \node[anchor=south west, text=uclbg,
+          font=\sffamily\small,
+          text width=0.82\paperwidth, align=left]
+      at ($(current page.south west) + (0.11\paperwidth, 0.05\paperheight)$)
+      {\color{uclbg!75!ucldarkpurple}\insertinstitute};
+  \end{tikzpicture}%
+}
+
+%%%------------------------------------------------------------
+%%%  Section divider slides (Fixed full-bleed stripe alignment)
+%%%------------------------------------------------------------
+\AtBeginSection[]{%
+  \global\uclNoLogofalse
+  \begin{frame}[plain, noframenumbering]
+    \begin{tikzpicture}[remember picture, overlay]
+      \clip (current page.south west) rectangle (current page.north east);
+      
+      \fill[uclbrightpurple] (current page.north west) rectangle ($(current page.south west) + (0.045\paperwidth, 0cm)$);
+      \fill[ucldarkpurple] ($(current page.north west) + (0.045\paperwidth, 0cm)$) rectangle ($(current page.south west) + (0.145\paperwidth, 0cm)$);
+      \fill[uclbrightpurple] ($(current page.north west) + (0.145\paperwidth, 0cm)$) rectangle ($(current page.south west) + (0.255\paperwidth, 0cm)$);
+      \fill[ucldarkpurple] ($(current page.north west) + (0.255\paperwidth, 0cm)$) rectangle (current page.south east);
+
+      \node[anchor=south east, inner sep=10pt] at (current page.south east)
+        {\includegraphics[height=1.2cm]{\UCLimgpath ucl-new-title.png}};
+
+      \node[anchor=west, text=uclbg, font=\sffamily\bfseries\Huge, text width=0.65\paperwidth, align=left]
+        at ($(current page.west) + (0.30\paperwidth, 0cm)$) {\insertsectionhead};
+    \end{tikzpicture}
+  \end{frame}
+}
+
+%%%------------------------------------------------------------
+%%%  Custom .divider frame setup
+%%%------------------------------------------------------------
+\newcommand{\uclDividerFrameStart}[1]{%
+  \setbeamertemplate{frametitle}{}%
+  \vspace*{0.18\paperheight}%
+  \hspace*{0.08\paperwidth}\begin{minipage}[t]{0.80\paperwidth}%
+    \sffamily
+    {\color{ucldarkpurple}\bfseries\Huge #1\par}
+    \vspace{1em}
+    \color{ucltext}\normalsize
+}
+\newcommand{\uclDividerFrameEnd}{\end{minipage}}
+
+%%%------------------------------------------------------------
+%%%  Utility commands & Text Macros
+%%%------------------------------------------------------------
+\newcommand{\faded}[1]{{\color{ucltext!40!uclbg}#1}}
+\newcommand{\fadedsmall}[1]{{\color{ucltext!40!uclbg}\footnotesize #1}}
+
+\sethlcolor{beamer-yellow!60}
+\newcommand{\magicmarker}[1]{\hl{#1}}
+\newcommand{\uclmonospace}[1]{{\ttfamily\large #1}}
+\newcommand{\imitatetitle}[1]{{\sffamily\bfseries\Large\color{ucldarkpurple}#1}}
+
+% Custom conference metadata infrastructure commands
+\newcommand{\conference}[2][]{%
+  \newcommand{\insertshortconference}{#1}%
+  \newcommand{\insertconference}{#2}%
+}
+
+% Hyperlink suppression utility macro
+\newcommand{\puretext}[1]{{\renewcommand{\hyperlink}[2]{##2}#1}}
+
+\newcommand{\txt}[1]{\text{#1}}
+\newcommand{\logit}{\text{logit}}
+\newcommand{\HR}{\text{HR}}
+\newcommand{\OR}{\text{OR}}
+\newcommand{\E}{\text{E}}
+\newcommand{\Var}{\text{Var}}
+\newcommand{\Cov}{\text{Cov}}
+\newcommand{\Corr}{\text{Corr}}
+\newcommand{\DIC}{\text{DIC}}
+\newcommand{\se}{\text{se}}
+\newcommand{\sd}{\text{sd}}
+\newcommand{\dnorm}{\text{Normal}}
+\newcommand{\dt}{\text{t}}
+\newcommand{\ddirch}{\text{Dirichlet}}
+\newcommand{\dmulti}{\text{Multinomial}}
+\newcommand{\dbeta}{\text{Beta}}
+\newcommand{\dgamma}{\text{Gamma}}
+\newcommand{\dbern}{\text{Bernoulli}}
+\newcommand{\dbin}{\text{Binomial}}
+\newcommand{\dpois}{\text{Poisson}}
+\newcommand{\dweib}{\text{Weibull}}
+\newcommand{\dexp}{\text{Exponential}}
+\newcommand{\dlnorm}{\text{logNormal}}
+\newcommand{\dunif}{\text{Uniform}}
+\newcommand{\icer}{\text{ICER}}
+\newcommand{\nb}{\text{NB}}
+\newcommand{\ol}{\text{OL}}
+\newcommand{\ceac}{\text{CEAC}}
+\newcommand{\evpi}{\text{EVPI}}
+\newcommand{\evppi}{\text{EVPPI}}
+\newcommand{\evsi}{\text{EVSI}}
+
+\newfontfamily\emojifont{Noto Color Emoji}[Renderer=HarfBuzz]
+\DeclareTextFontCommand{\textemoji}{\emojifont}
