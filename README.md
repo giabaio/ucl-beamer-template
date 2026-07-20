@@ -12,6 +12,40 @@ not be too complicated to create.
    ```
    lualatex presentation.tex
    ```
+ 
+## .tex file
+The `.tex` file contains a section in which the user can specify their details, including the possibility to
+add social media links and icons (via `fontawesome5`). These are of course only optional and more could be 
+customised.
+
+Simply change name, title, date, etc in the block below in the `presentation.tex` file. 
+
+```
+%------------------------------------------------------------
+% PRESENTATION METADATA
+%------------------------------------------------------------
+\title[A short title]{A very long title for my slides, which may span across two lines}
+\author{Your Name}
+\date[20 Jul 2026]{20 July 2026}
+
+% Using your new automated conference metadata macro
+\conference[SHORTER TITLE OF THE CONFERENCE]{The full name of the conference, Where it is\\ The name of the session}
+
+% Affiliation
+\institute{Department of Statistical Science ~ | ~ University College London}
+
+% These can be commented out if you don't want email/website/social media links
+\newcommand{\insertsocials}{%
+  {\setlength{\baselineskip}{9pt}%
+  \faEnvelope~\href{mailto:n.surname@ucl.ac.uk}{\texttt{n.surname@ucl.ac.uk}} \\
+  \faGlobe~\href{https://yourwebsite.com}{\texttt{https://yourwebsite.com}}\\
+  \faGithub~\href{https://github.com/you}{\texttt{https://github.com/you}} \\
+% Can also add social media links, e.g.
+  \faMastodon~\href{https://mas.to/@yourmastodon}{\texttt{@yourmastodon@mas.to}} \,\textbar\, 
+  \faLinkedinIn~\href{https://www.linkedin.com/in/name-surname/}{\texttt{name-surname}}
+  }%
+}
+```
 
 ## Computer specs
 This has been tested on a Linux PopOS 24.04 machine.
