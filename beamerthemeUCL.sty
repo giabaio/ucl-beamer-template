@@ -14,10 +14,28 @@
 \ifpdftex
   \RequirePackage[T1]{fontenc}
   \RequirePackage[utf8]{inputenc}
-  \IfFileExists{carlito.sty}{%
-    \RequirePackage{carlito}%
+  % Pick the closest Aptos-like sans available. Aptos is a humanist
+  % grotesque; the closest freely-available match on TeX Live is
+  % Fira Sans (also humanist grotesque). Carlito (Calibri clone) is
+  % close in metric feel; helvet is a last-ditch fallback.
+  %
+  % If you have Aptos installed as an OTF/TTF system font AND you
+  % want it in pdflatex too, run once (from the project directory,
+  % LCDF Type Tools required):
+  %     autoinst --encoding=T1 -t /path/to/Aptos*.ttf
+  % which generates aptos.sty. That branch is checked first below.
+  \IfFileExists{aptos.sty}{%
+    \RequirePackage{aptos}%
   }{%
-    \RequirePackage{helvet}%
+    \IfFileExists{FiraSans.sty}{%
+      \RequirePackage{FiraSans}%
+    }{%
+      \IfFileExists{carlito.sty}{%
+        \RequirePackage{carlito}%
+      }{%
+        \RequirePackage{helvet}%
+      }%
+    }%
   }
   \renewcommand{\familydefault}{\sfdefault}
   \RequirePackage{bm}
@@ -77,8 +95,27 @@
   \protected\def\boldsymbol#1{\symbf{#1}}
 \fi
 
-% Restore classical Computer Modern calligraphic \mathcal
-\DeclareMathAlphabet{\mathcal}{OMS}{cmsy}{m}{n}
+% Restore classical Computer Modern calligraphic \mathcal.
+% Skipped under xelatex on purpose: unicode-math already owns math
+% alphabets, and forcing a legacy OMS/cmsy (Type1) reference on top
+% of it makes xdvipdfmx choke ("Invalid font: -1" at PDF-write time)
+% on installs whose font map lacks a cmsy entry -- TinyTeX is a
+% common offender. LuaLaTeX handles the mixed setup fine and pdflatex
+% needs the redeclaration since it has no unicode-math.
+\ifxetex\else
+  \DeclareMathAlphabet{\mathcal}{OMS}{cmsy}{m}{n}
+\fi
+
+% Under pdflatex the body font is now sans (Fira/Carlito/Helvet), but
+% beamer's default font theme also routes math through sans, so
+% \text{...} inside the stats macros below (\logit, \HR, \dnorm, ...)
+% and the math letters themselves come out as CM Sans Serif rather
+% than classical CM Roman. Switching only the math side of beamer to
+% the serif font theme puts math back into CM without touching the
+% slide body. Xe/lualatex already get proper math via unicode-math.
+\ifpdftex
+  \usefonttheme[onlymath]{serif}
+\fi
 
 % Math color wrapper helper
 \def\class#1#2{{\color{#1}#2}}
@@ -98,24 +135,52 @@
 % sans (and default) family in the header block. Under xe/lualatex we
 % try UCLSans (shipped with the project), then Aptos as a fallback,
 % then Latin Modern Sans as an ultimate safety net.
+%
+% Note on italic: LuaLaTeX synthesises italic via AutoFakeSlant=0.18,
+% but that transform on a TTF makes xdvipdfmx fail at PDF-write time
+% ("Invalid font: -1"). Under XeLaTeX we point ItalicFont/BoldItalicFont
+% at the upright weights instead -- italic content renders upright but
+% the file compiles. If UCLSans ever ships proper italic files, swap
+% those in and you get real italic under xelatex too.
 \ifpdftex\else
   \IfFileExists{\UCLfontpath UCLSans-Regular.ttf}{%
-    \setmainfont{UCLSans}[
-      Path             = \UCLfontpath,
-      Extension        = .ttf,
-      UprightFont      = *-Regular,
-      BoldFont         = *-Bold,
-      FontFace         = {sb}{n}{*-SemiBold},
-      AutoFakeSlant    = 0.18,
-    ]
-    \setsansfont{UCLSans}[
-      Path             = \UCLfontpath,
-      Extension        = .ttf,
-      UprightFont      = *-Regular,
-      BoldFont         = *-Bold,
-      FontFace         = {sb}{n}{*-SemiBold},
-      AutoFakeSlant    = 0.18,
-    ]
+    \ifxetex
+      \setmainfont{UCLSans}[
+        Path             = \UCLfontpath,
+        Extension        = .ttf,
+        UprightFont      = *-Regular,
+        BoldFont         = *-Bold,
+        ItalicFont       = *-Regular,
+        BoldItalicFont   = *-Bold,
+        FontFace         = {sb}{n}{*-SemiBold},
+      ]
+      \setsansfont{UCLSans}[
+        Path             = \UCLfontpath,
+        Extension        = .ttf,
+        UprightFont      = *-Regular,
+        BoldFont         = *-Bold,
+        ItalicFont       = *-Regular,
+        BoldItalicFont   = *-Bold,
+        FontFace         = {sb}{n}{*-SemiBold},
+      ]
+    \else
+      \setmainfont{UCLSans}[
+        Path             = \UCLfontpath,
+        Extension        = .ttf,
+        UprightFont      = *-Regular,
+        BoldFont         = *-Bold,
+        FontFace         = {sb}{n}{*-SemiBold},
+        AutoFakeSlant    = 0.18,
+      ]
+      \setsansfont{UCLSans}[
+        Path             = \UCLfontpath,
+        Extension        = .ttf,
+        UprightFont      = *-Regular,
+        BoldFont         = *-Bold,
+        FontFace         = {sb}{n}{*-SemiBold},
+        AutoFakeSlant    = 0.18,
+      ]
+    \fi
   }{%
     \IfFontExistsTF{Aptos}{%
       \setmainfont{Aptos}%
@@ -417,21 +482,14 @@
 \newcommand{\evppi}{\text{EVPPI}}
 \newcommand{\evsi}{\text{EVSI}}
 
-% Emoji: HarfBuzz is a LuaLaTeX-only renderer, XeLaTeX handles Noto
-% Color Emoji natively where available, and pdfLaTeX cannot load
-% OpenType emoji at all -> \textemoji becomes a passthrough there.
+% Emoji: colour-emoji fonts have COLR/CBDT tables that xdvipdfmx (the
+% xelatex driver) frequently fails to embed -- symptom is
+% 'xdvipdfmx:fatal: Invalid font: -1 (...)' at output time -- so we
+% only load Noto Color Emoji under LuaLaTeX (HarfBuzz) and make
+% \textemoji a passthrough everywhere else.
 \ifluatex
   \newfontfamily\emojifont{Noto Color Emoji}[Renderer=HarfBuzz]
   \DeclareTextFontCommand{\textemoji}{\emojifont}
 \else
-  \ifxetex
-    \IfFontExistsTF{Noto Color Emoji}{%
-      \newfontfamily\emojifont{Noto Color Emoji}%
-      \DeclareTextFontCommand{\textemoji}{\emojifont}%
-    }{%
-      \newcommand{\textemoji}[1]{#1}%
-    }
-  \else
-    \newcommand{\textemoji}[1]{#1}
-  \fi
+  \newcommand{\textemoji}[1]{#1}
 \fi
