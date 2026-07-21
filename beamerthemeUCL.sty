@@ -1,29 +1,40 @@
 %%%============================================================
 %%%  beamerthemeUCL.sty
-%%%  UCL Beamer theme for LuaLaTeX / XeLaTeX / pdfLaTeX
-%%%  (c) Gianluca Baio, July 2026
+%%%  UCL Beamer Presentation Theme
+%%%  (c) Gianluca Baio
 %%%============================================================
 \ProvidesPackage{beamerthemeUCL}[2026/07/20 UCL Beamer Theme]
 
 \RequirePackage{iftex}
+\RequirePackage{ifthen}
+\RequirePackage{tikz}
+\RequirePackage{graphicx}
+\RequirePackage{xcolor}
+\RequirePackage{soul}
+\RequirePackage{fontawesome5}
+\RequirePackage[most]{tcolorbox}
 
-% Font machinery is engine-dependent:
-%   * LuaLaTeX / XeLaTeX -> fontspec + unicode-math (native OTF/TTF)
-%   * pdfLaTeX           -> T1 fontenc + carlito (Calibri/Aptos-like sans)
-%                           + bm (for \bm and \boldsymbol)
+% ============================================================
+% Package & Theme Options
+% ============================================================
+\newboolean{UCL@darkslides}
+\setboolean{UCL@darkslides}{false}
+\newboolean{UCL@nosectionpages}
+\setboolean{UCL@nosectionpages}{false}
+\newboolean{UCL@nofootline}
+\setboolean{UCL@nofootline}{false}
+
+\DeclareOptionBeamer{dark}{\setboolean{UCL@darkslides}{true}}
+\DeclareOptionBeamer{nosectionpages}{\setboolean{UCL@nosectionpages}{true}}
+\DeclareOptionBeamer{nofootline}{\setboolean{UCL@nofootline}{true}}
+\ProcessOptionsBeamer
+
+% ============================================================
+% Engine-Dependent Font Handling (Clean Reference Mechanism)
+% ============================================================
 \ifpdftex
   \RequirePackage[T1]{fontenc}
   \RequirePackage[utf8]{inputenc}
-  % Pick the closest Aptos-like sans available. Aptos is a humanist
-  % grotesque; the closest freely-available match on TeX Live is
-  % Fira Sans (also humanist grotesque). Carlito (Calibri clone) is
-  % close in metric feel; helvet is a last-ditch fallback.
-  %
-  % If you have Aptos installed as an OTF/TTF system font AND you
-  % want it in pdflatex too, run once (from the project directory,
-  % LCDF Type Tools required):
-  %     autoinst --encoding=T1 -t /path/to/Aptos*.ttf
-  % which generates aptos.sty. That branch is checked first below.
   \IfFileExists{aptos.sty}{%
     \RequirePackage{aptos}%
   }{%
@@ -39,16 +50,26 @@
   }
   \renewcommand{\familydefault}{\sfdefault}
   \RequirePackage{bm}
+  \usefonttheme[onlymath]{serif}
 \else
   \RequirePackage{fontspec}
-  \RequirePackage{unicode-math}
+  % Force Computer Modern serif/sans for maths under XeLaTeX/LuaLaTeX
+  \usefonttheme[onlymath]{serif}
+  
+  % Load UCL Sans safely if present, otherwise default to system sans
+  \IfFileExists{css/fonts/UCLSans-Regular.ttf}{%
+    \setsansfont{UCLSans}[
+      Path           = css/fonts/,
+      Extension      = .ttf,
+      UprightFont    = *-Regular,
+      BoldFont       = *-Bold
+    ]%
+  }{%
+    \IfFontExistsTF{UCL Sans}{%
+      \setsansfont{UCL Sans}%
+    }{}%
+  }
 \fi
-
-\RequirePackage{tikz}
-\RequirePackage[most]{tcolorbox}
-\RequirePackage{soul}
-\RequirePackage{xcolor}
-\RequirePackage{fontawesome5}
 
 %%%============================================================
 %%%  Pandoc/Quarto Compatibility & Layout Helpers
@@ -58,146 +79,53 @@
 \RequirePackage{array}
 \RequirePackage{calc} 
 \RequirePackage{caption}
-\RequirePackage{graphicx}
 
 \newcounter{none} % for unnumbered tables
-
-% Make caption package work with longtable
 \def\fnum@table{\tablename~\thetable}
 
 \newsavebox\pandoc@box
-\newcommand*\pandocbounded[1]{% scales image to fit in text height/width
+\newcommand*\pandocbounded[1]{%
   \sbox\pandoc@box{#1}%
   \Gscale@div\@tempa{\textheight}{\dimexpr\ht\pandoc@box+\dp\pandoc@box\relax}%
   \Gscale@div\@tempb{\linewidth}{\wd\pandoc@box}%
-  \ifdim\@tempb\p@<\@tempa\p@\let\@tempa\@tempb\fi% select the smaller of both
+  \ifdim\@tempb\p@<\@tempa\p@\let\@tempa\@tempb\fi%
   \ifdim\@tempa\p@<\p@\scalebox{\@tempa}{\usebox\pandoc@box}%
   \else\usebox{\pandoc@box}%
   \fi%
 }
 
-% Set default figure placement to htbp
 \def\fps@figure{htbp}
-
 \usetikzlibrary{calc, positioning}
 
-% Per-frame boolean: true = skip logo on this frame
 \newif\ifuclNoLogo
 
 %%%============================================================
-%%%  Unicode-Math compatibility
+%%%  Math Helpers & Compatibility
 %%%============================================================
-% Under xe/lualatex we route \bm and \boldsymbol through unicode-math's
-% \symbf. Under pdflatex the bm package (loaded above) already provides
-% both, so we leave them alone.
 \ifpdftex\else
-  \protected\def\bm#1{\symbf{#1}}
-  \protected\def\boldsymbol#1{\symbf{#1}}
+  \providecommand{\bm}[1]{\mathbf{#1}}
+  \providecommand{\boldsymbol}[1]{\mathbf{#1}}
 \fi
 
-% Restore classical Computer Modern calligraphic \mathcal.
-% Skipped under xelatex on purpose: unicode-math already owns math
-% alphabets, and forcing a legacy OMS/cmsy (Type1) reference on top
-% of it makes xdvipdfmx choke ("Invalid font: -1" at PDF-write time)
-% on installs whose font map lacks a cmsy entry -- TinyTeX is a
-% common offender. LuaLaTeX handles the mixed setup fine and pdflatex
-% needs the redeclaration since it has no unicode-math.
-\ifxetex\else
-  \DeclareMathAlphabet{\mathcal}{OMS}{cmsy}{m}{n}
-\fi
-
-% Under pdflatex the body font is now sans (Fira/Carlito/Helvet), but
-% beamer's default font theme also routes math through sans, so
-% \text{...} inside the stats macros below (\logit, \HR, \dnorm, ...)
-% and the math letters themselves come out as CM Sans Serif rather
-% than classical CM Roman. Switching only the math side of beamer to
-% the serif font theme puts math back into CM without touching the
-% slide body. Xe/lualatex already get proper math via unicode-math.
-\ifpdftex
-  \usefonttheme[onlymath]{serif}
-\fi
-
-% Math color wrapper helper
 \def\class#1#2{{\color{#1}#2}}
 
+% xcolor/XeLaTeX math color safety definition
+\def\mathcolor#1#{\@mathcolor{#1}}
+\def\@mathcolor#1#2#3{%
+  \protect\leavevmode
+  \begingroup
+    \color#1{#2}#3%
+  \endgroup
+}
+
 %%%============================================================
-%%%  Path constants
+%%%  Path Constants
 %%%============================================================
-% These can be modified, but the UCL fonts and logo images must be
-% available and the sty file must know where to look for them!
 \providecommand{\UCLfontpath}{css/fonts/}
 \providecommand{\UCLimgpath}{images/}
 
 %%%============================================================
-%%%  Fonts
-%%%============================================================
-% Under pdflatex there's nothing to do here: carlito was set as the
-% sans (and default) family in the header block. Under xe/lualatex we
-% try UCLSans (shipped with the project), then Aptos as a fallback,
-% then Latin Modern Sans as an ultimate safety net.
-%
-% Note on italic: LuaLaTeX synthesises italic via AutoFakeSlant=0.18,
-% but that transform on a TTF makes xdvipdfmx fail at PDF-write time
-% ("Invalid font: -1"). Under XeLaTeX we point ItalicFont/BoldItalicFont
-% at the upright weights instead -- italic content renders upright but
-% the file compiles. If UCLSans ever ships proper italic files, swap
-% those in and you get real italic under xelatex too.
-\ifpdftex\else
-  \IfFileExists{\UCLfontpath UCLSans-Regular.ttf}{%
-    \ifxetex
-      \setmainfont{UCLSans}[
-        Path             = \UCLfontpath,
-        Extension        = .ttf,
-        UprightFont      = *-Regular,
-        BoldFont         = *-Bold,
-        ItalicFont       = *-Regular,
-        BoldItalicFont   = *-Bold,
-        FontFace         = {sb}{n}{*-SemiBold},
-      ]
-      \setsansfont{UCLSans}[
-        Path             = \UCLfontpath,
-        Extension        = .ttf,
-        UprightFont      = *-Regular,
-        BoldFont         = *-Bold,
-        ItalicFont       = *-Regular,
-        BoldItalicFont   = *-Bold,
-        FontFace         = {sb}{n}{*-SemiBold},
-      ]
-    \else
-      \setmainfont{UCLSans}[
-        Path             = \UCLfontpath,
-        Extension        = .ttf,
-        UprightFont      = *-Regular,
-        BoldFont         = *-Bold,
-        FontFace         = {sb}{n}{*-SemiBold},
-        AutoFakeSlant    = 0.18,
-      ]
-      \setsansfont{UCLSans}[
-        Path             = \UCLfontpath,
-        Extension        = .ttf,
-        UprightFont      = *-Regular,
-        BoldFont         = *-Bold,
-        FontFace         = {sb}{n}{*-SemiBold},
-        AutoFakeSlant    = 0.18,
-      ]
-    \fi
-  }{%
-    \IfFontExistsTF{Aptos}{%
-      \setmainfont{Aptos}%
-      \setsansfont{Aptos}%
-    }{%
-      \setmainfont{Latin Modern Sans}%
-      \setsansfont{Latin Modern Sans}%
-    }%
-  }
-
-  \IfFontExistsTF{Ubuntu Mono}{%
-    \setmonofont{Ubuntu Mono}[Scale=0.90]%
-  }{}
-\fi
-
-%%%============================================================
-%%%  Colours (UCL palette)
+%%%  Colours (Full UCL Palette & Custom Classes)
 %%%============================================================
 \definecolor{uclbrightpurple}{HTML}{993BFF}
 \definecolor{ucldarkpurple}{HTML}{361A54}
@@ -211,7 +139,7 @@
 \definecolor{ucllink}{HTML}{95A6B8}
 \definecolor{uclfootertext}{HTML}{CCD1D5}
 
-% Named colour classes
+% Custom Named Colour Classes
 \definecolor{myred}{HTML}{E62B4F}
 \definecolor{myblue}{HTML}{24568C}
 \definecolor{orange}{HTML}{FF8811}
@@ -232,15 +160,27 @@
 \definecolor{Maroon}{HTML}{800000}
 
 %%%============================================================
-%%%  Beamer colour scheme
+%%%  Beamer Colour Scheme
 %%%============================================================
-\setbeamercolor{normal text}{fg=ucltext, bg=uclbg}
-\setbeamercolor{background canvas}{bg=uclbg}
-\setbeamercolor{structure}{fg=ucldarkpurple}
+\ifthenelse{\boolean{UCL@darkslides}}{%
+  \setbeamercolor{normal text}{fg=uclbg, bg=ucldarkpurple}
+  \setbeamercolor{background canvas}{bg=ucldarkpurple}
+  \setbeamercolor{structure}{fg=uclbrightpurple}
+  \setbeamercolor{frametitle}{fg=uclbg, bg=ucldarkpurple}
+  \setbeamercolor{block title}{fg=ucldarkpurple, bg=uclbrightpurple}
+  \setbeamercolor{block body}{fg=uclbg, bg=ucldarkpurple!80!black}
+}{%
+  \setbeamercolor{normal text}{fg=ucltext, bg=uclbg}
+  \setbeamercolor{background canvas}{bg=uclbg}
+  \setbeamercolor{structure}{fg=ucldarkpurple}
+  \setbeamercolor{frametitle}{fg=ucldarkpurple, bg=uclbg}
+  \setbeamercolor{block title}{fg=uclbg, bg=ucldarkpurple}
+  \setbeamercolor{block body}{fg=ucltext, bg=uclbg!92!ucldarkpurple}
+}
+
 \setbeamercolor{alerted text}{fg=uclbrightpurple}
 \setbeamercolor{example text}{fg=ucldarkgold}
 
-\setbeamercolor{frametitle}{fg=ucldarkpurple, bg=uclbg}
 \setbeamercolor{title}{fg=uclbg}
 \setbeamercolor{subtitle}{fg=uclbg}
 \setbeamercolor{author}{fg=uclbg}
@@ -253,11 +193,8 @@
 \setbeamercolor{enumerate item}{fg=ucldarkgold}
 \setbeamercolor{enumerate subitem}{fg=ucldarkgold}
 
-\setbeamercolor{block title}{fg=uclbg, bg=ucldarkpurple}
-\setbeamercolor{block body}{fg=ucltext, bg=uclbg!92!ucldarkpurple}
-
 %%%============================================================
-%%%  Beamer fonts & Templates
+%%%  Beamer Fonts & Structure
 %%%============================================================
 \setbeamerfont{subtitle}{family=\sffamily, size=\normalsize}
 \setbeamerfont{author}{family=\sffamily, series=\bfseries, size=\small}
@@ -282,7 +219,6 @@
 
 % Blocks template
 \setbeamertemplate{block begin}{%
-  \setbeamercolor{block title}{fg=uclbg, bg=ucldarkpurple}%
   \begin{beamercolorbox}[colsep*=.75ex, sep=0.4ex, rounded=true]{block title}%
     \usebeamerfont*{block title}\insertblocktitle
   \end{beamercolorbox}%
@@ -312,39 +248,50 @@
 %%%============================================================
 %%%  Footline Setup
 %%%============================================================
-\setbeamertemplate{footline}{%
-  \ifnum\insertframenumber=1\relax
-    % Title frame background doesn't require a footer band
-  \else
-    \begin{tikzpicture}[remember picture, overlay]
-      \clip (current page.south west) rectangle (current page.north east);
-      
-      \fill[uclbrightpurple] (current page.south west) 
-        rectangle ($(current page.south west) + (0.10\paperwidth, 0.55cm)$);
-      \fill[ucldarkpurple] ($(current page.south west) + (0.10\paperwidth, 0cm)$) 
-        rectangle ($(current page.south east) + (0cm, 0.55cm)$);
-      
-      \node[anchor=west, font=\sffamily\scriptsize, text=uclfootertext, text width=0.75\paperwidth, align=left]
-        at ($(current page.south west) + (0.11\paperwidth, 0.275cm)$) {
-          \textcopyright{} \insertshortauthor{} \textbar{} \puretext{\insertshorttitle} \textbar{} \insertshortconference{} \textbar{} \insertshortdate{}
-        };
+\ifthenelse{\boolean{UCL@nofootline}}{%
+  \setbeamertemplate{footline}{}%
+}{%
+  \setbeamertemplate{footline}{%
+    \ifnum\insertframenumber=1\relax
+    \else
+      \begin{tikzpicture}[remember picture, overlay]
+        \clip (current page.south west) rectangle (current page.north east);
         
-      \node[anchor=east, font=\sffamily\scriptsize, text=uclfootertext]
-        at ($(current page.south east) + (-0.02\paperwidth, 0.275cm)$) {\insertframenumber/\inserttotalframenumber};
+        \fill[uclbrightpurple] (current page.south west) 
+          rectangle ($(current page.south west) + (0.10\paperwidth, 0.55cm)$);
+        \fill[ucldarkpurple] ($(current page.south west) + (0.10\paperwidth, 0cm)$) 
+          rectangle ($(current page.south east) + (0cm, 0.55cm)$);
         
-      \ifuclNoLogo\else
-        \node[anchor=south east, inner sep=2pt]
-          at ($(current page.south east) + (-0.01\paperwidth, 0.55cm)$)
-          {\includegraphics[height=0.6cm]{\UCLimgpath ucl-new-logo.png}};
-      \fi
-    \end{tikzpicture}%
-    \vspace*{0.55cm}%
-    \global\uclNoLogofalse
-  \fi
+        \node[anchor=west, font=\sffamily\scriptsize, text=uclfootertext, text width=0.75\paperwidth, align=left]
+          at ($(current page.south west) + (0.11\paperwidth, 0.275cm)$) {
+            \textcopyright{} \insertshortauthor{} \textbar{} \puretext{\insertshorttitle} \textbar{} \insertshortconference{} \textbar{} \insertshortdate{}
+          };
+          
+        \node[anchor=east, font=\sffamily\scriptsize, text=uclfootertext]
+          at ($(current page.south east) + (-0.02\paperwidth, 0.275cm)$) {\insertframenumber/\inserttotalframenumber};
+          
+        \ifuclNoLogo\else
+          \IfFileExists{\UCLimgpath ucl-new-logo.png}{%
+            \node[anchor=south east, inner sep=2pt]
+              at ($(current page.south east) + (-0.01\paperwidth, 0.55cm)$)
+              {\includegraphics[height=0.6cm]{\UCLimgpath ucl-new-logo.png}};
+          }{%
+            \IfFileExists{ucl-fullname-logo.png}{%
+              \node[anchor=south east, inner sep=2pt]
+                at ($(current page.south east) + (-0.01\paperwidth, 0.55cm)$)
+                {\includegraphics[height=0.6cm]{ucl-fullname-logo.png}};
+            }{}%
+          }
+        \fi
+      \end{tikzpicture}%
+      \vspace*{0.55cm}%
+      \global\uclNoLogofalse
+    \fi
+  }%
 }
 
 %%%============================================================
-%%%  Title page template
+%%%  Title Page Template
 %%%============================================================
 \setbeamertemplate{title page}{%
   \begin{tikzpicture}[remember picture, overlay]
@@ -353,8 +300,15 @@
     \fill[uclbrightpurple] (current page.north west) rectangle ($(current page.south west) + (0.10\paperwidth, 0cm)$);
     \fill[ucldarkpurple] ($(current page.north west) + (0.10\paperwidth, 0cm)$) rectangle (current page.south east);
 
-    \node[anchor=south east, inner sep=10pt] at (current page.south east)
-      {\includegraphics[height=1.0cm]{\UCLimgpath ucl-new-title.png}};
+    \IfFileExists{\UCLimgpath ucl-new-title.png}{%
+      \node[anchor=south east, inner sep=10pt] at (current page.south east)
+        {\includegraphics[height=1.0cm]{\UCLimgpath ucl-new-title.png}};
+    }{%
+      \IfFileExists{ucl-logo_white_letters.png}{%
+        \node[anchor=south east, inner sep=10pt] at (current page.south east)
+          {\includegraphics[height=1.0cm]{ucl-logo_white_letters.png}};
+      }{}%
+    }
 
     \node[anchor=north west] at ($(current page.north west) + (0.11\paperwidth, -0.14\paperheight)$)
       {\color{uclbg}\sffamily\bfseries\Huge
@@ -383,7 +337,6 @@
       {\color{uclbg!75!ucldarkpurple}\insertdate 
        \ifx\insertconference\undefined\else \\ \insertconference\fi};
 
-    % institute at the bottom (empty = nothing rendered)
     \node[anchor=south west, text=uclbg,
           font=\sffamily\small,
           text width=0.82\paperwidth, align=left]
@@ -393,30 +346,39 @@
 }
 
 %%%============================================================
-%%%  Section divider slides
+%%%  Section Divider Slides
 %%%============================================================
-\AtBeginSection[]{%
-  \global\uclNoLogofalse
-  \begin{frame}[plain, noframenumbering]
-    \begin{tikzpicture}[remember picture, overlay]
-      \clip (current page.south west) rectangle (current page.north east);
-      
-      \fill[uclbrightpurple] (current page.north west) rectangle ($(current page.south west) + (0.045\paperwidth, 0cm)$);
-      \fill[ucldarkpurple] ($(current page.north west) + (0.045\paperwidth, 0cm)$) rectangle ($(current page.south west) + (0.145\paperwidth, 0cm)$);
-      \fill[uclbrightpurple] ($(current page.north west) + (0.145\paperwidth, 0cm)$) rectangle ($(current page.south west) + (0.255\paperwidth, 0cm)$);
-      \fill[ucldarkpurple] ($(current page.north west) + (0.255\paperwidth, 0cm)$) rectangle (current page.south east);
+\ifthenelse{\boolean{UCL@nosectionpages}}{}{%
+  \AtBeginSection[]{%
+    \global\uclNoLogofalse
+    \begin{frame}[plain, noframenumbering]
+      \begin{tikzpicture}[remember picture, overlay]
+        \clip (current page.south west) rectangle (current page.north east);
+        
+        \fill[uclbrightpurple] (current page.north west) rectangle ($(current page.south west) + (0.045\paperwidth, 0cm)$);
+        \fill[ucldarkpurple] ($(current page.north west) + (0.045\paperwidth, 0cm)$) rectangle ($(current page.south west) + (0.145\paperwidth, 0cm)$);
+        \fill[uclbrightpurple] ($(current page.north west) + (0.145\paperwidth, 0cm)$) rectangle ($(current page.south west) + (0.255\paperwidth, 0cm)$);
+        \fill[ucldarkpurple] ($(current page.north west) + (0.255\paperwidth, 0cm)$) rectangle (current page.south east);
 
-      \node[anchor=south east, inner sep=10pt] at (current page.south east)
-        {\includegraphics[height=1.2cm]{\UCLimgpath ucl-new-title.png}};
+        \IfFileExists{\UCLimgpath ucl-new-title.png}{%
+          \node[anchor=south east, inner sep=10pt] at (current page.south east)
+            {\includegraphics[height=1.2cm]{\UCLimgpath ucl-new-title.png}};
+        }{%
+          \IfFileExists{ucl-logo_white_letters.png}{%
+            \node[anchor=south east, inner sep=10pt] at (current page.south east)
+              {\includegraphics[height=1.2cm]{ucl-logo_white_letters.png}};
+          }{}%
+        }
 
-      \node[anchor=west, text=uclbg, font=\sffamily\bfseries\Huge, text width=0.65\paperwidth, align=left]
-        at ($(current page.west) + (0.30\paperwidth, 0cm)$) {\insertsectionhead};
-    \end{tikzpicture}
-  \end{frame}
+        \node[anchor=west, text=uclbg, font=\sffamily\bfseries\Huge, text width=0.65\paperwidth, align=left]
+          at ($(current page.west) + (0.30\paperwidth, 0cm)$) {\insertsectionhead};
+      \end{tikzpicture}
+    \end{frame}
+  }%
 }
 
 %%%============================================================
-%%%  Custom divider frame setup
+%%%  Custom Dividers & Dynamic Dark Frames
 %%%============================================================
 \newcommand{\uclDividerFrameStart}[1]{%
   \setbeamertemplate{frametitle}{}%
@@ -429,8 +391,20 @@
 }
 \newcommand{\uclDividerFrameEnd}{\end{minipage}}
 
+\newcommand{\darksection}{%
+  \setbeamertemplate{background canvas}{%
+    \color{ucldarkpurple}\rule{\paperwidth}{\paperheight}}%
+  \setbeamercolor{normal text}{fg=uclbg, bg=ucldarkpurple}%
+  \setbeamercolor{frametitle}{fg=uclbg, bg=ucldarkpurple}%
+  \setbeamercolor{block title}{fg=ucldarkpurple, bg=uclbrightpurple}%
+  \setbeamercolor{block body}{fg=uclbg, bg=ucldarkpurple!80!black}%
+  \usebeamercolor[fg]{normal text}%
+}
+
+\newenvironment{darkframes}{\begingroup\darksection}{\endgroup}
+
 %%%============================================================
-%%%  Utility commands & Text Macros
+%%%  Utility Commands & Stats Macros
 %%%============================================================
 \newcommand{\faded}[1]{{\color{ucltext!40!uclbg}#1}}
 \newcommand{\fadedsmall}[1]{{\color{ucltext!40!uclbg}\footnotesize #1}}
@@ -440,16 +414,14 @@
 \newcommand{\uclmonospace}[1]{{\ttfamily\large #1}}
 \newcommand{\imitatetitle}[1]{{\sffamily\bfseries\Large\color{ucldarkpurple}#1}}
 
-% Custom conference metadata infrastructure commands
 \newcommand{\conference}[2][]{%
   \newcommand{\insertshortconference}{#1}%
   \newcommand{\insertconference}{#2}%
 }
 
-% Hyperlink suppression utility macro
 \newcommand{\puretext}[1]{{\renewcommand{\hyperlink}[2]{##2}#1}}
 
-% These are a bunch of helpful Stats commands. More can be defined if needed.
+% Stats Commands
 \newcommand{\txt}[1]{\text{#1}}
 \newcommand{\logit}{\text{logit}}
 \newcommand{\HR}{\text{HR}}
@@ -468,6 +440,7 @@
 \newcommand{\dbeta}{\text{Beta}}
 \newcommand{\dgamma}{\text{Gamma}}
 \newcommand{\dbern}{\text{Bernoulli}}
+\definecolor{myred}{HTML}{E62B4F}
 \newcommand{\dbin}{\text{Binomial}}
 \newcommand{\dpois}{\text{Poisson}}
 \newcommand{\dweib}{\text{Weibull}}
@@ -477,16 +450,13 @@
 \newcommand{\icer}{\text{ICER}}
 \newcommand{\nb}{\text{NB}}
 \newcommand{\ol}{\text{OL}}
+\definecolor{uclgold}{HTML}{C6AA51}
 \newcommand{\ceac}{\text{CEAC}}
 \newcommand{\evpi}{\text{EVPI}}
 \newcommand{\evppi}{\text{EVPPI}}
 \newcommand{\evsi}{\text{EVSI}}
 
-% Emoji: colour-emoji fonts have COLR/CBDT tables that xdvipdfmx (the
-% xelatex driver) frequently fails to embed -- symptom is
-% 'xdvipdfmx:fatal: Invalid font: -1 (...)' at output time -- so we
-% only load Noto Color Emoji under LuaLaTeX (HarfBuzz) and make
-% \textemoji a passthrough everywhere else.
+% Emoji setup
 \ifluatex
   \newfontfamily\emojifont{Noto Color Emoji}[Renderer=HarfBuzz]
   \DeclareTextFontCommand{\textemoji}{\emojifont}
