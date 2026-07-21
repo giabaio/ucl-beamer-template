@@ -3,14 +3,17 @@
 This is the beamer theme for the UCL official branding (2026). The style needs the folders
 `css/fonts` with the official UCL fonts and `images` with the official logo (in different sizes and formats).
 
-At present, the style handles compilation with `lualatex` only -- but `xelatex` and possibly `pdflatex` should
-not be too complicated to create.
+The style handles compilation with `lualatex` as default, but `xelatex` and `pdflatex` are also allowed and possible using the theme.
 
 ## Example
 1. Download/fork this repository
 2. Open the `.tex` file and compile using `lualatex`, for instance on a terminal type
    ```
    lualatex presentation.tex
+   # Can also use other engines
+   xelatex presentation.tex
+   # In pdflatex, cannot use the UCL fonts and falls back to something like Aptos
+   pdflatex presentation.tex
    ```
  
 ## .tex file
