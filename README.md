@@ -47,5 +47,18 @@ Simply change name, title, date, etc in the block below in the `presentation.tex
 }
 ```
 
-## Computer specs
-This has been tested on a Linux PopOS 24.04 machine.
+## Potential issues
+The code may potentially complain when processing the command `\mathcolor`. A suitable fix should be to add
+```
+\usepackage{xcolor}
+\makeatletter
+\def\mathcolor#1#{\@mathcolor{#1}}
+\def\@mathcolor#1#2#3{%
+  \protect\leavevmode
+  \begingroup
+    \color#1{#2}#3%
+  \endgroup
+}
+\makeatother
+```
+to the `beamerthemeUCL.sty` file (thanks to Phil Dawid for pointing this out). This, however, was not happening on a Linux PopOS 24.04 machine, when developing the code and performing some (limited!) testing.
