@@ -1,17 +1,36 @@
 %%%============================================================
 %%%  beamerthemeUCL.sty
-%%%  UCL Beamer theme for LuaLaTeX
+%%%  UCL Beamer theme for LuaLaTeX / XeLaTeX / pdfLaTeX
 %%%  (c) Gianluca Baio, July 2026
 %%%============================================================
 \ProvidesPackage{beamerthemeUCL}[2026/07/20 UCL Beamer Theme]
 
-\RequirePackage{fontspec}
+\RequirePackage{iftex}
+
+% Font machinery is engine-dependent:
+%   * LuaLaTeX / XeLaTeX -> fontspec + unicode-math (native OTF/TTF)
+%   * pdfLaTeX           -> T1 fontenc + carlito (Calibri/Aptos-like sans)
+%                           + bm (for \bm and \boldsymbol)
+\ifpdftex
+  \RequirePackage[T1]{fontenc}
+  \RequirePackage[utf8]{inputenc}
+  \IfFileExists{carlito.sty}{%
+    \RequirePackage{carlito}%
+  }{%
+    \RequirePackage{helvet}%
+  }
+  \renewcommand{\familydefault}{\sfdefault}
+  \RequirePackage{bm}
+\else
+  \RequirePackage{fontspec}
+  \RequirePackage{unicode-math}
+\fi
+
 \RequirePackage{tikz}
 \RequirePackage[most]{tcolorbox}
 \RequirePackage{soul}
 \RequirePackage{xcolor}
 \RequirePackage{fontawesome5}
-\RequirePackage{unicode-math}
 
 %%%============================================================
 %%%  Pandoc/Quarto Compatibility & Layout Helpers
@@ -50,8 +69,13 @@
 %%%============================================================
 %%%  Unicode-Math compatibility
 %%%============================================================
-\protected\def\bm#1{\symbf{#1}}
-\protected\def\boldsymbol#1{\symbf{#1}}
+% Under xe/lualatex we route \bm and \boldsymbol through unicode-math's
+% \symbf. Under pdflatex the bm package (loaded above) already provides
+% both, so we leave them alone.
+\ifpdftex\else
+  \protected\def\bm#1{\symbf{#1}}
+  \protected\def\boldsymbol#1{\symbf{#1}}
+\fi
 
 % Restore classical Computer Modern calligraphic \mathcal
 \DeclareMathAlphabet{\mathcal}{OMS}{cmsy}{m}{n}
@@ -70,26 +94,42 @@
 %%%============================================================
 %%%  Fonts
 %%%============================================================
-\setmainfont{UCLSans}[
-  Path             = \UCLfontpath,
-  Extension        = .ttf,
-  UprightFont      = *-Regular,
-  BoldFont         = *-Bold,
-  FontFace         = {sb}{n}{*-SemiBold},
-  AutoFakeSlant    = 0.18,
-]
-\setsansfont{UCLSans}[
-  Path             = \UCLfontpath,
-  Extension        = .ttf,
-  UprightFont      = *-Regular,
-  BoldFont         = *-Bold,
-  FontFace         = {sb}{n}{*-SemiBold},
-  AutoFakeSlant    = 0.18,
-]
+% Under pdflatex there's nothing to do here: carlito was set as the
+% sans (and default) family in the header block. Under xe/lualatex we
+% try UCLSans (shipped with the project), then Aptos as a fallback,
+% then Latin Modern Sans as an ultimate safety net.
+\ifpdftex\else
+  \IfFileExists{\UCLfontpath UCLSans-Regular.ttf}{%
+    \setmainfont{UCLSans}[
+      Path             = \UCLfontpath,
+      Extension        = .ttf,
+      UprightFont      = *-Regular,
+      BoldFont         = *-Bold,
+      FontFace         = {sb}{n}{*-SemiBold},
+      AutoFakeSlant    = 0.18,
+    ]
+    \setsansfont{UCLSans}[
+      Path             = \UCLfontpath,
+      Extension        = .ttf,
+      UprightFont      = *-Regular,
+      BoldFont         = *-Bold,
+      FontFace         = {sb}{n}{*-SemiBold},
+      AutoFakeSlant    = 0.18,
+    ]
+  }{%
+    \IfFontExistsTF{Aptos}{%
+      \setmainfont{Aptos}%
+      \setsansfont{Aptos}%
+    }{%
+      \setmainfont{Latin Modern Sans}%
+      \setsansfont{Latin Modern Sans}%
+    }%
+  }
 
-\IfFontExistsTF{Ubuntu Mono}{%
-  \setmonofont{Ubuntu Mono}[Scale=0.90]%
-}{}
+  \IfFontExistsTF{Ubuntu Mono}{%
+    \setmonofont{Ubuntu Mono}[Scale=0.90]%
+  }{}
+\fi
 
 %%%============================================================
 %%%  Colours (UCL palette)
@@ -377,5 +417,21 @@
 \newcommand{\evppi}{\text{EVPPI}}
 \newcommand{\evsi}{\text{EVSI}}
 
-\newfontfamily\emojifont{Noto Color Emoji}[Renderer=HarfBuzz]
-\DeclareTextFontCommand{\textemoji}{\emojifont}
+% Emoji: HarfBuzz is a LuaLaTeX-only renderer, XeLaTeX handles Noto
+% Color Emoji natively where available, and pdfLaTeX cannot load
+% OpenType emoji at all -> \textemoji becomes a passthrough there.
+\ifluatex
+  \newfontfamily\emojifont{Noto Color Emoji}[Renderer=HarfBuzz]
+  \DeclareTextFontCommand{\textemoji}{\emojifont}
+\else
+  \ifxetex
+    \IfFontExistsTF{Noto Color Emoji}{%
+      \newfontfamily\emojifont{Noto Color Emoji}%
+      \DeclareTextFontCommand{\textemoji}{\emojifont}%
+    }{%
+      \newcommand{\textemoji}[1]{#1}%
+    }
+  \else
+    \newcommand{\textemoji}[1]{#1}
+  \fi
+\fi
